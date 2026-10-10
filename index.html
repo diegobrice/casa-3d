@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Casa 3D</title>
+</head>
+<body>
+  <div id="app"><div id="labels"></div></div>
+
+  <header>
+    <h1>Casa 3D</h1>
+    <p>Arrastrar: rotar · Rueda: zoom · Clic derecho: desplazar · Clic: editar material</p>
+  </header>
+
+  <nav>
+    <button id="btn-iso">Isométrica</button>
+    <button id="btn-top">Planta</button>
+    <button id="btn-doors" aria-pressed="true">Puertas abiertas</button>
+    <button id="btn-labels" aria-pressed="true">Etiquetas</button>
+    <button id="btn-furniture" aria-pressed="true">Muebles</button>
+  </nav>
+
+  <div id="lighting" class="pill" role="group" aria-label="Iluminación">
+    <button data-value="day" aria-pressed="true">Día</button>
+    <button data-value="evening" aria-pressed="false">Tarde</button>
+    <button data-value="night" aria-pressed="false">Noche</button>
+  </div>
+
+  <aside id="editor" aria-label="Editor de materiales" hidden>
+    <div class="ed-head">
+      <div><small>Material</small><strong id="ed-title"></strong></div>
+      <button id="ed-close" aria-label="Cerrar editor">×</button>
+    </div>
+    <div id="ed-finishes" class="ed-finishes" role="group" aria-label="Acabado"></div>
+    <label class="ed-row"><span>Color</span><input type="color" id="ed-color"></label>
+    <label class="ed-row"><span>Brillo</span><input type="range" id="ed-gloss" min="0" max="100" step="1"><output id="ed-gloss-out"></output></label>
+    <label class="ed-row"><span>Escala</span><input type="range" id="ed-scale" min="25" max="400" step="5"><output id="ed-scale-out"></output></label>
+    <button id="ed-reset">Restablecer</button>
+  </aside>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
