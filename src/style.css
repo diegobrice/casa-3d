@@ -30,6 +30,12 @@ nav button:hover, .pill button:hover { background: #f1f1f1; }
 nav button[aria-pressed="true"], .pill button[aria-pressed="true"] { background: var(--ink); color: #fff; }
 nav button:focus-visible, .pill button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
+/* ── Controles de cámara: columna a la izquierda, centrada en vertical */
+#camera { left: 24px; top: 50%; transform: translateY(-50%); flex-direction: column; border-radius: 22px; }
+#camera button { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; touch-action: none; }
+#camera svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#camera hr { width: 20px; margin: 3px auto; border: 0; border-top: 1px solid var(--line); }
+
 /* De noche el fondo es oscuro: el encabezado pasa a claro */
 header { transition: color .6s; }
 body.dark { background: #0b0d14; }
@@ -78,5 +84,7 @@ body.dark header p { color: #a9adb8; }
   header p { display: none; }
   nav button, .pill button { padding: 9px 12px; font-size: 11px; }
   #lighting { left: auto; right: 12px; top: 10px; bottom: auto; }
+  #camera { left: 12px; }
+  #camera button { width: 34px; height: 34px; padding: 0; }
   .lbl { font-size: 8px; }
 }

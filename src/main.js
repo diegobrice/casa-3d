@@ -47,6 +47,9 @@ bindUI({
     stage.updateShadows();
     invalidate();
   },
+  onZoom: (factor) => view.zoomBy(factor),
+  onOrbit: (theta, phi) => view.orbitBy(theta, phi),
+  onFrame: () => view.frame(),
   onLighting: (preset) => {
     stage.lighting.setPreset(preset);
     document.body.classList.toggle('dark', Boolean(LIGHTING_PRESETS[preset].dark));
@@ -59,7 +62,7 @@ loop = createRenderLoop(stage, (dt) => {
   if (doorsMoving) stage.updateShadows();
   const lightChanging = stage.lighting.update(dt);
   const flashing = editor.update(dt);
-  const cameraMoving = view.update();
+  const cameraMoving = view.update(dt);
   textures.water.offset.x += dt * 0.012;   // ondulación del agua (visible mientras hay movimiento)
   textures.water.offset.y += dt * 0.02;
   return doorsMoving || lightChanging || flashing || cameraMoving;

@@ -8,6 +8,8 @@ export const VIEWS = {
 
 const CAMERA_DISTANCE = 80;
 const FIT_MARGIN = 0.86;
+const EASE_RATE = 12;        // rapidez con que se aplican los pasos de los botones de cámara
+const MIN_POLAR = 1e-4;      // evita la singularidad de la vista cenital
 
 // OrbitControls + vistas predefinidas con encuadre automático del modelo
 // `onChange` se llama cuando una vista o un reencuadre cambian la cámara de golpe.
@@ -24,6 +26,34 @@ export function createView(camera, domElement, bounds, onChange) {
   controls.addEventListener('start', () => { userMoved = true; });
 
   const corner = new THREE.Vector3();
+
+  // Movimiento pendiente pedido desde los botones (giro en radianes, zoom en escala logarítmica).
+  // Se reparte en varios cuadros para que el paso sea suave.
+  const pending = { theta: 0, phi: 0, zoom: 0 };
+  const offset = new THREE.Vector3(), spherical = new THREE.Spherical();
+
+  function applyPending(dt) {
+    const k = 1 - Math.exp(-dt * EASE_RATE);
+    const take = (key) => {
+      const step = Math.abs(pending[key]) < 1e-4 ? pending[key] : pending[key] * k;
+      pending[key] -= step;
+      return step;
+    };
+
+    if (pending.theta || pending.phi) {
+      offset.copy(camera.position).sub(controls.target);
+      spherical.setFromVector3(offset);
+      spherical.theta += take('theta');
+      spherical.phi = THREE.MathUtils.clamp(spherical.phi + take('phi'), MIN_POLAR, controls.maxPolarAngle);
+      camera.position.copy(controls.target).add(offset.setFromSpherical(spherical));
+    }
+    if (pending.zoom) {
+      const zoom = THREE.MathUtils.clamp(camera.zoom * Math.exp(take('zoom')), controls.minZoom, controls.maxZoom);
+      if (zoom === camera.zoom) pending.zoom = 0;   // tope alcanzado
+      camera.zoom = zoom;
+      camera.updateProjectionMatrix();
+    }
+  }
 
   // Última pose vista de la cámara. Se compara con tolerancia en vez de usar el evento 'change'
   // de OrbitControls, que con inercia sigue disparándose con la cámara ya quieta. Los umbrales
@@ -61,6 +91,7 @@ export function createView(camera, domElement, bounds, onChange) {
   return {
     setView(direction) {
       userMoved = false;
+      pending.theta = pending.phi = pending.zoom = 0;
       controls.target.set(0, 0, 0);
       camera.position.copy(direction).multiplyScalar(CAMERA_DISTANCE);
       camera.lookAt(0, 0, 0);
@@ -70,8 +101,29 @@ export function createView(camera, domElement, bounds, onChange) {
     },
     // Tras un cambio de tamaño solo se reencuadra si el usuario no ha movido la cámara
     refit() { if (!userMoved) fit(); onChange(); },
-    // Aplica la inercia de los controles; devuelve true si la cámara se movió en este cuadro
-    update() {
+    // Gira alrededor del modelo: `theta` horizontal, `phi` inclinación (radianes)
+    orbitBy(theta, phi = 0) {
+      userMoved = true;
+      pending.theta += theta;
+      pending.phi += phi;
+    },
+    // Multiplica el zoom actual (>1 acerca, <1 aleja)
+    zoomBy(factor) {
+      userMoved = true;
+      pending.zoom += Math.log(factor);
+    },
+    // Centra y encuadra el modelo sin cambiar el ángulo de la cámara
+    frame() {
+      pending.theta = pending.phi = pending.zoom = 0;
+      camera.position.sub(controls.target);
+      controls.target.set(0, 0, 0);
+      controls.update();
+      fit();
+      onChange();
+    },
+    // Aplica los pasos pendientes y la inercia; devuelve true si la cámara se movió en este cuadro
+    update(dt) {
+      applyPending(dt);
       controls.update();
       return cameraMoved();
     },
